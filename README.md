@@ -1,42 +1,65 @@
-Install RedHat OpenShift Origin in your development box.
+## Vagrantfile
+simple Centos machine
 
-## Installation
+## Vagrantfile_openshift_complete
 
-1. Create a VM as explained in https://youtu.be/aqXSbDZggK4 (this video) by Grant Shipley
+Complete OCP installation: https://blog.openshift.com/using-openshift-3-on-your-local-environme
 
-2. Define mandatory variables for the installation process
+Step 7: Authenticate to OpenShift 3 with the web console
 
+Now that we have everything up and running, you probably want to authenticate to the platform.  Let’s start by using the web console.  Open up your browser and go to the following URL:
+
+https://10.2.2.2:8443
+
+
+
+
+## Vagrant Centos Gui
 ```
-# Domain name to access the cluster
-$ export DOMAIN=<public ip addres>.nip.io 
-
-# User created after installation
-$ export USERNAME=<current user name>
-
-# Password for the user
-$ export PASSWORD=password
-```
-
-3. Define optional variables for the installation process
-
-```
-# Instead of using loopback, setup DeviceMapper on this disk.
-# !! All data on the disk will be wiped out !!
-$ export DISK="/dev/sda"
+config.vm.provider "virtualbox" do |v|
+  v.gui = true
+  v.memory = 2048
+  v.cpus = 2
+end
 ```
 
-3. Run the automagic installation script as root:
+### Log into your vm:
 
 ```
-curl https://raw.githubusercontent.com/gshipley/installcentos/master/install-openshift.sh | /bin/bash
+$ vagrant ssh
 ```
 
-## Development
-
-For development it's possible to switch the script repo
+Then switch to root:
 
 ```
-# Change location of source repository
-$ export SCRIPT_REPO="https://raw.githubusercontent.com/gshipley/installcentos/master"
-$ curl $SCRIPT_REPO/install-openshift.sh | /bin/bash
+$ sudo -i 
+```
+
+Then install the gui desktop collection of packages:
+
+```
+$ yum groupinstall -y 'gnome desktop'
+$ yum install -y 'xorg*'
+```
+
+
+Next uninstall the following packages:
+
+```
+yum remove -y initial-setup initial-setup-gui
+```
+
+These packages are to do with agreeing to EULA agreements, which means it requires user interaction, which can prevent automated startups via vagrant.
+
+### Next switch to the gui target:
+
+```
+$ systemctl isolate graphical.target
+$ systemctl set-default graphical.target   # to make this persistant
+```
+
+You should now see the gui desktop in your virtualbox window. If not, then try restarting the box:
+
+```
+$ vagrant halt ; vagrant up
 ```
