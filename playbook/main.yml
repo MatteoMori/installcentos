@@ -1,0 +1,95 @@
+- name: Sping Vagrant Centos 7 VM
+  hosts: localhost
+  connection: ssh 
+
+  vars_files:
+    - vars/vm_details.yml
+    - vars/vault.yml
+
+
+  tasks:
+#   # - name: Install packages
+#   #   apt:
+#   #     name: "{{ item }}"
+#   #     state: present
+#   #   become: true
+#   #   with_items:
+#   #     - git
+#   #    # - virtualbox
+#   #    # - vagrant
+#    
+#    - name: Create dir for Vagrant config files
+#      file:
+#        state: directory
+#        path: ./vm      
+#
+#    - name: Create Vagrantfile from template
+#      template:
+#        src: "{{ playbook_dir }}/templates/Vagrantfile.j2"
+#        dest: ./vm/Vagrantfile
+#     
+#    - name: Deploy VM
+#      command: vagrant up
+#      args:
+#        chdir: ./vm/
+
+    - name: Update inventory
+      template:
+        src: "{{ playbook_dir }}/templates/host.j2"
+        dest: "{{ playbook_dir }}/host"
+  
+    - name: Refresh inventory
+      meta: refresh_inventory
+
+- name: Configure VM and install openshift
+  hosts: ocp_host
+  become: true
+  connection: ssh
+  remote_user: vagrant
+  vars:
+    ansible_ssh_private_key_file: ./vm/.vagrant/machines/default/virtualbox/private_key
+  
+  vars_files:
+    - vars/vm_details.yml
+
+  tasks:
+    - name: Install Centos GUI
+      shell: yum groupinstall -y 'gnome desktop'
+
+    - name: Install packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - git
+        - ansible
+        - docker
+        - vim
+        - wget
+        - xorg*
+
+    - name: Remove un-necessary packages
+      yum:
+        name: "{{ item }}"
+        state: absent
+      with_items:
+        - initial-setup 
+        - initial-setup-gui
+
+    - name: Start GUI
+      shell: systemctl isolate graphical.target && systemctl set-default graphical.target
+
+
+    - name: Fetch Git Repo with Openshift installer
+      git:
+        repo: 'https://github.com/MatteoMori/vagrant-openshift-centos.git'
+        dest: /home/vagrant/vagrant-openshift-centos
+        version: master
+
+    - name: Run Openshift installer
+      shell: ./install-openshift.sh
+      args:
+        chdir: /home/vagrant/vagrant-openshift-centos/original-repo
+      environment:
+        username: "{{ ocp_user }}"
+        password: "{{ ocp_pass }}"

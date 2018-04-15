@@ -1,0 +1,11 @@
+---
+vm_image: centos
+vm_tag: 7
+vm_private_ip: 192.168.10.10
+vagrant_provider: "virtualbox"
+vm_memory: 6144
+
+
+ocp_user: matteo
+ocp_pass: matteo
+...
