@@ -1,3 +1,9 @@
+## Playbook
+```
+ansible-playbook main.yml -i host --ask-vault-pass -vv
+```
+
+
 ## Vagrantfile
 simple Centos machine
 
