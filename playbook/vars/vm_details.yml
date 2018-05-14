@@ -6,6 +6,5 @@ vagrant_provider: "virtualbox"
 vm_memory: 6144
 
 
-ocp_user: matteo
-ocp_pass: matteo
+ansible_sudo_pass: <pass_vanna>
 ...
