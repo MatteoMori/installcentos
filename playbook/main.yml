@@ -1,22 +1,20 @@
 - name: Sping Vagrant Centos 7 VM
   hosts: localhost
-  connection: ssh 
+  connection: local 
 
   vars_files:
     - vars/vm_details.yml
-    - vars/vault.yml
-
 
   tasks:
-    - name: Install packages
-      apt:
-        name: "{{ item }}"
-        state: present
-      become: true
-      with_items:
-        - git
-        - virtualbox
-        - vagrant
+   # - name: Install packages
+   #   apt:
+   #     name: "{{ item }}"
+   #     state: present
+   #   become: true
+   #   with_items:
+   #     - git
+   #    # - virtualbox
+   #    # - vagrant
     
     - name: Create dir for Vagrant config files
       file:
@@ -32,4 +30,37 @@
       command: vagrant up
       args:
         chdir: ./vm/
+
+    - name: Update inventory
+      template:
+        src: "{{ playbook_dir }}/templates/host.j2"
+        dest: "{{ playbook_dir }}/host"
+  
+    - name: Refresh inventory
+      meta: refresh_inventory
+
+- name: Configure VM
+  hosts: ocp_host
+  become: true
+  connection: ssh
+  remote_user: vagrant
+  vars:
+    ansible_ssh_private_key_file: ./vm/.vagrant/machines/default/virtualbox/private_key
+  
+  vars_files:
+    - vars/vm_details.yml
+
+  tasks:
+    - name: Update packages
+      shell: yum update -y 
+
+    - name: Install packages
+      yum:
+        name: "{{ item }}"
+        state: latest
+      with_items:
+        - git
+        - ansible
+        - vim
+        - wget
 ...
