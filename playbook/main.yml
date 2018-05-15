@@ -63,4 +63,10 @@
         - ansible
         - vim
         - wget
+        - httpd
+        
+    - name: Start service httpd, if not running
+      service:
+        name: httpd
+        state: started
 ...
